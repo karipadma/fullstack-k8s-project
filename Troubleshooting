@@ -1,0 +1,367 @@
+Complete Command Reference with Why We Used It
+1. Verify EKS Cluster
+Check cluster nodes
+kubectl get nodes
+
+Why?
+
+Verify worker nodes joined the cluster.
+
+Output:
+
+NAME                         STATUS
+ip-192-168-x-x.ec2.internal  Ready
+2. Deploy Application
+Create resources
+kubectl apply -f deployment.yaml
+
+Why?
+
+Creates Deployment resource in Kubernetes.
+Create service
+kubectl apply -f service.yaml
+
+Why?
+
+Expose application through ClusterIP/LoadBalancer.
+3. Verify Pods
+List pods
+kubectl get pods
+
+Why?
+
+Check whether application containers are running.
+
+Example:
+
+Running
+CrashLoopBackOff
+Completed
+ImagePullBackOff
+Watch pod status
+kubectl get pods -w
+
+Why?
+
+Observe pod lifecycle in real time.
+
+Useful during rollout.
+
+4. Investigate Pod Failures
+Describe pod
+kubectl describe pod POD_NAME
+
+Why?
+
+Shows:
+- Events
+- Scheduling issues
+- Restart counts
+- Image pull errors
+- Resource problems
+
+Used when:
+
+CrashLoopBackOff
+Completed
+Pending
+View logs
+kubectl logs POD_NAME
+
+Why?
+
+See application output.
+
+Used to find:
+
+Python errors
+Database errors
+Redis errors
+Import errors
+Previous container logs
+kubectl logs POD_NAME --previous
+
+Why?
+
+Pod restarted before you could inspect logs.
+
+Very useful for CrashLoopBackOff.
+
+5. Verify Deployment
+Check deployment
+kubectl get deployments
+
+Why?
+
+Verify desired replicas.
+Rollout status
+kubectl rollout status deployment/backend-deployment
+
+Why?
+
+Monitor deployment progress.
+6. Update Image
+Update image
+kubectl set image deployment/backend-deployment \
+backend=ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/backend:v2
+
+Why?
+
+Deploy newer image without deleting deployment.
+Verify rollout
+kubectl get pods -w
+
+Why?
+
+Observe old pods terminating and new pods starting.
+7. Verify Services
+List services
+kubectl get svc
+
+Why?
+
+Check:
+- ClusterIP
+- LoadBalancer
+- External URL
+
+Used to obtain:
+
+backend ELB URL
+frontend ELB URL
+8. Verify Connectivity
+Test backend
+curl http://LB_URL/api/employees
+
+Why?
+
+Verify API endpoint is reachable.
+Test POST
+curl -X POST \
+-H "Content-Type: application/json" \
+-d '{"name":"Alex","role":"Developer"}'
+
+Why?
+
+Verify inserts into database.
+9. Inspect Running Container
+Open shell
+kubectl exec -it deployment/backend-deployment -- sh
+
+Why?
+
+Inspect container internals.
+
+Used to check:
+
+.env
+app.py
+config.py
+DNS resolution
+networking
+Read files
+kubectl exec -it deployment/backend-deployment \
+-- cat /app/app.py
+
+Why?
+
+Verify deployed code matches local code.
+
+We discovered old code versions this way.
+
+10. Verify DNS
+
+Inside pod:
+
+python -c "
+import socket
+print(socket.gethostbyname('hostname'))
+"
+
+Why?
+
+Check DNS resolution.
+
+Used for Redis endpoint testing.
+
+11. Verify TCP Connectivity
+
+Inside pod:
+
+import socket
+
+s = socket.socket()
+s.settimeout(5)
+
+print(
+    s.connect_ex(
+      ("redis-host",6379)
+    )
+)
+
+Why?
+
+Verify network connectivity.
+
+Result:
+
+0 = success
+11 = timeout
+
+This helped identify Redis networking issues.
+
+12. ECR Commands
+Login
+aws ecr get-login-password \
+| docker login
+
+Why?
+
+Authenticate Docker with ECR.
+Build image
+docker build -t backend:v1 .
+
+Why?
+
+Create Docker image.
+Tag image
+docker tag backend:v1 \
+ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/backend:v1
+
+Why?
+
+Prepare image for ECR.
+Push image
+docker push \
+ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/backend:v1
+
+Why?
+
+Upload image to ECR.
+13. AWS Networking Troubleshooting
+Get EKS VPC
+aws eks describe-cluster \
+--name my-eks-cluster \
+--query cluster.resourcesVpcConfig.vpcId
+
+Why?
+
+Find EKS VPC.
+Get EKS Subnets
+aws eks describe-cluster \
+--name my-eks-cluster \
+--query cluster.resourcesVpcConfig.subnetIds
+
+Why?
+
+Identify cluster networking.
+Get ElastiCache Details
+aws elasticache describe-serverless-caches
+
+Why?
+
+Find:
+- Endpoint
+- VPC
+- Security Group
+Check Subnet VPC
+aws ec2 describe-subnets \
+--subnet-ids subnet-id
+
+Why?
+
+Determine which VPC resources belong to.
+
+This revealed:
+
+EKS VPC      -> vpc-01d5...
+Redis VPC    -> vpc-00513...
+
+Root cause of timeout.
+
+Check Security Group
+aws ec2 describe-security-groups \
+--group-ids sg-id
+
+Why?
+
+Verify inbound/outbound rules.
+14. Database Troubleshooting
+View table
+SELECT * FROM employees;
+
+Why?
+
+Verify inserted records.
+Check schema
+SHOW CREATE TABLE employees;
+
+Why?
+
+Verify columns and AUTO_INCREMENT.
+Show tables
+SHOW TABLES;
+
+Why?
+
+Verify table exists.
+15. Browser Troubleshooting
+Open DevTools
+F12
+
+or
+
+Ctrl + Shift + I
+
+Why?
+
+Inspect frontend requests.
+Network Tab
+
+Used to inspect:
+
+GET requests
+POST requests
+Status codes
+Payloads
+Responses
+CORS headers
+Biggest Lessons Learned
+CrashLoopBackOff
+
+Tools:
+
+kubectl describe pod
+kubectl logs
+Wrong Code Deployed
+
+Tools:
+
+kubectl exec
+cat app.py
+Redis Timeout
+
+Tools:
+
+socket.connect_ex()
+aws elasticache describe-serverless-caches
+aws ec2 describe-subnets
+CORS Failure
+
+Tools:
+
+Browser DevTools
+Network Tab
+Database Errors
+
+Tools:
+
+SHOW CREATE TABLE
+SELECT *
+Rolling Updates
+
+Tools:
+
+kubectl set image
+kubectl rollout status
+kubectl get pods -w
