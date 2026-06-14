@@ -14,17 +14,22 @@
 
 <script>
 
-const API = "/api/employees";
+const API = "http://a205e67a3d0b64230a8a92d35a626357-1893057570.us-east-1.elb.amazonaws.com/api/employees";
 
 function addEmp() {
   fetch(API, {
     method: "POST",
-    headers: {"Content-Type":"application/json"},
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({
       name: document.getElementById("name").value,
       role: document.getElementById("role").value
     })
-  }).then(r => r.json()).then(alert);
+  })
+  .then(r => r.json())
+  .then(d => alert(JSON.stringify(d)))
+  .catch(err => alert("Error: " + err));
 }
 
 function getEmp() {
@@ -33,10 +38,14 @@ function getEmp() {
     .then(d => {
       document.getElementById("out").innerText =
         JSON.stringify(d, null, 2);
-    });
+    })
+    .catch(err => alert("Error: " + err));
 }
 
 </script>
+
+</body>
+</html>
 
 </body>
 </html>
