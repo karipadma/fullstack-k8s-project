@@ -1,4 +1,4 @@
-
+```yaml
 name: Build and Deploy to EKS
 
 on:
@@ -52,7 +52,6 @@ jobs:
 
       # 6. Build backend Docker image
       - name: Build backend image
-      - name: Build backend image
         run: |
           docker build \
             -t $ECR_REGISTRY/backend:${{ github.sha }} \
@@ -81,12 +80,12 @@ jobs:
         run: |
           kubectl apply -f backend/service.yaml
 
-      # 11. Apply frontend Deployment YAML
+      # 11. Apply frontend Deployment
       - name: Apply frontend Deployment
         run: |
           kubectl apply -f frontend/deployment.yaml
 
-      # 12. Apply backend Deployment YAML
+      # 12. Apply backend Deployment
       - name: Apply backend Deployment
         run: |
           kubectl apply -f backend/deployment.yaml
@@ -122,3 +121,4 @@ jobs:
       - name: Verify Services
         run: |
           kubectl get svc
+```
