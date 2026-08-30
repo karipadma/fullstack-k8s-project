@@ -1,1 +1,104 @@
+```yaml
+name: Build and Deploy to EKS
 
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: 763487052879.dkr.ecr.us-east-1.amazonaws.com
+  EKS_CLUSTER_NAME: my-eks-cluster
+
+jobs:
+
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # 1. Checkout GitHub repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Configure AWS using GitHub OIDC
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::763487052879:role/GitHubActionsRole
+          aws-region: ${{ env.AWS_REGION }}
+
+      # 3. Login to Amazon ECR
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # 4. Build frontend Docker image
+      - name: Build frontend image
+        run: |
+          docker build \
+            -t $ECR_REGISTRY/frontend:${{ github.sha }} \
+            ./frontend
+
+      # 5. Push frontend image to ECR
+      - name: Push frontend image
+        run: |
+          docker push \
+            $ECR_REGISTRY/frontend:${{ github.sha }}
+
+      # 6. Build backend Docker image
+      - name: Build backend image
+        run: |
+          docker build \
+            -t $ECR_REGISTRY/backend:${{ github.sha }} \
+            ./backend
+
+      # 7. Push backend image to ECR
+      - name: Push backend image
+        run: |
+          docker push \
+            $ECR_REGISTRY/backend:${{ github.sha }}
+
+      # 8. Configure kubectl for EKS
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region $AWS_REGION \
+            --name $EKS_CLUSTER_NAME
+
+      # 9. Deploy frontend
+      - name: Deploy frontend
+        run: |
+          kubectl set image deployment/frontend-deployment \
+            frontend=$ECR_REGISTRY/frontend:${{ github.sha }}
+
+      # 10. Deploy backend
+      - name: Deploy backend
+        run: |
+          kubectl set image deployment/backend-deployment \
+            backend=$ECR_REGISTRY/backend:${{ github.sha }}
+
+      # 11. Wait for frontend rollout
+      - name: Verify frontend
+        run: |
+          kubectl rollout status deployment/frontend-deployment
+
+      # 12. Wait for backend rollout
+      - name: Verify backend
+        run: |
+          kubectl rollout status deployment/backend-deployment
+
+      # 13. Show Pods
+      - name: Verify Pods
+        run: |
+          kubectl get pods -o wide
+
+      # 14. Show Services
+      - name: Verify Services
+        run: |
+          kubectl get svc
+```
