@@ -12,7 +12,7 @@ permissions:
 env:
   AWS_REGION: us-east-1
   ECR_REGISTRY: 016065103695.dkr.ecr.us-east-1.amazonaws.com
-  EKS_CLUSTER_NAME: test
+  EKS_CLUSTER_NAME: my-eks-cluster
 
 jobs:
 
