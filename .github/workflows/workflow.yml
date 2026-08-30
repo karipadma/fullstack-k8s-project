@@ -1,3 +1,4 @@
+```yaml
 name: Build and Deploy to EKS
 
 on:
@@ -51,6 +52,7 @@ jobs:
 
       # 6. Build backend Docker image
       - name: Build backend image
+      - name: Build backend image
         run: |
           docker build \
             -t $ECR_REGISTRY/backend:${{ github.sha }} \
@@ -69,44 +71,55 @@ jobs:
             --region $AWS_REGION \
             --name $EKS_CLUSTER_NAME
 
-      # 9. Apply frontend Deployment YAML
+      # 9. Apply frontend Service
+      - name: Apply frontend Service
+        run: |
+          kubectl apply -f frontend/service.yaml
+
+      # 10. Apply backend Service
+      - name: Apply backend Service
+        run: |
+          kubectl apply -f backend/service.yaml
+
+      # 11. Apply frontend Deployment YAML
       - name: Apply frontend Deployment
         run: |
           kubectl apply -f frontend/deployment.yaml
 
-      # 10. Apply backend Deployment YAML
+      # 12. Apply backend Deployment YAML
       - name: Apply backend Deployment
         run: |
           kubectl apply -f backend/deployment.yaml
 
-      # 11. Update frontend to the new image
+      # 13. Update frontend to the new image
       - name: Update frontend image
         run: |
           kubectl set image deployment/frontend-deployment \
             frontend=$ECR_REGISTRY/frontend:${{ github.sha }}
 
-      # 12. Update backend to the new image
+      # 14. Update backend to the new image
       - name: Update backend image
         run: |
           kubectl set image deployment/backend-deployment \
             backend=$ECR_REGISTRY/backend:${{ github.sha }}
 
-      # 13. Wait for frontend rollout
+      # 15. Wait for frontend rollout
       - name: Verify frontend
         run: |
           kubectl rollout status deployment/frontend-deployment
 
-      # 14. Wait for backend rollout
+      # 16. Wait for backend rollout
       - name: Verify backend
         run: |
           kubectl rollout status deployment/backend-deployment
 
-      # 15. Show running Pods
+      # 17. Show running Pods
       - name: Verify Pods
         run: |
-          kubectl get pods 
+          kubectl get pods
 
-      # 16. Show Services
+      # 18. Show Services
       - name: Verify Services
         run: |
           kubectl get svc
+```
