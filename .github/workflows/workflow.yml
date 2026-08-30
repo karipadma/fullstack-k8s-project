@@ -104,7 +104,7 @@ jobs:
       # 15. Show running Pods
       - name: Verify Pods
         run: |
-          kubectl get pods -o wide
+          kubectl get pods 
 
       # 16. Show Services
       - name: Verify Services
