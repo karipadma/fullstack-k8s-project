@@ -1,4 +1,4 @@
-```yaml
+
 name: Build and Deploy to EKS
 
 on:
@@ -122,4 +122,3 @@ jobs:
       - name: Verify Services
         run: |
           kubectl get svc
-```
