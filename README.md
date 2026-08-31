@@ -176,7 +176,7 @@ Tag image:
 
 ```bash
 docker tag backend:v1 \
-ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/backend:v1
+ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/backend:v1    # u change with ecr repo
 ```
 
 Push image:
